@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import Iterable, List, Optional
+from typing import List, Optional
 
 from .parse import Element, ParsedDocument, render_open_tag
 from .utils import (
@@ -26,7 +26,6 @@ from .utils import (
     parse_color,
     parse_css_size,
     parse_inline_style,
-    relative_luminance,
 )
 
 
@@ -46,7 +45,9 @@ class Finding:
 # ---------------------------------------------------------------------------
 
 
-def _effective_color(el: Element, doc: ParsedDocument) -> tuple[Optional[RGBA], Optional[RGBA]]:
+def _effective_color(
+    el: Element, doc: ParsedDocument
+) -> tuple[Optional[RGBA], Optional[RGBA]]:
     """Walk up the parent chain pulling the nearest color/background-color
     declarations from inline styles. Returns (fg, bg).
 
@@ -307,9 +308,15 @@ def form_label(doc: ParsedDocument) -> List[Finding]:
 # as OpenAI just because the looser pattern also matches it.
 _SECRET_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
     ("Anthropic API key", re.compile(r"\bsk-ant-[A-Za-z0-9_-]{20,}\b")),
-    ("OpenAI API key", re.compile(r"\bsk-(?:proj-|svcacct-|admin-|live-)?[A-Za-z0-9_-]{20,}\b")),
+    (
+        "OpenAI API key",
+        re.compile(r"\bsk-(?:proj-|svcacct-|admin-|live-)?[A-Za-z0-9_-]{20,}\b"),
+    ),
     ("Google AI API key", re.compile(r"\bAIza[0-9A-Za-z_-]{30,}\b")),
-    ("GitHub personal token", re.compile(r"\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{20,}\b")),
+    (
+        "GitHub personal token",
+        re.compile(r"\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{20,}\b"),
+    ),
     ("GitHub fine-grained PAT", re.compile(r"\bgithub_pat_[A-Za-z0-9_]{30,}\b")),
     ("Slack bot token", re.compile(r"\bxox[abp]-[0-9]+-[0-9]+-[A-Za-z0-9]+\b")),
     ("AWS access key", re.compile(r"\bAKIA[0-9A-Z]{16}\b")),

@@ -40,15 +40,28 @@ class ParsedDocument:
 
 # Tags that never have closing tags. Mirrors the HTML5 void-element list.
 _VOID = {
-    "area", "base", "br", "col", "embed", "hr", "img", "input",
-    "link", "meta", "param", "source", "track", "wbr",
+    "area",
+    "base",
+    "br",
+    "col",
+    "embed",
+    "hr",
+    "img",
+    "input",
+    "link",
+    "meta",
+    "param",
+    "source",
+    "track",
+    "wbr",
 }
 
 
 class _Walker(HTMLParser):
     def __init__(self, raw: str) -> None:
-        # ``convert_charrefs=False`` keeps us deterministic across Python
-        # versions and lets us decide ourselves when entities matter.
+        # ``convert_charrefs=True`` decodes character references in text
+        # nodes so secret/heading scanning sees the rendered text rather
+        # than raw entities.
         super().__init__(convert_charrefs=True)
         self.raw = raw
         self.elements: List[Element] = []
@@ -132,7 +145,9 @@ def parse_html(html: str) -> ParsedDocument:
 def render_open_tag(el: Element, max_len: int = 80) -> str:
     """Best-effort ``<tag attr="...">`` snippet for finding messages."""
     if el.attrs:
-        attrs = " ".join(f'{k}="{v.replace(chr(34), "&quot;")}"' for k, v in el.attrs.items())
+        attrs = " ".join(
+            f'{k}="{v.replace(chr(34), "&quot;")}"' for k, v in el.attrs.items()
+        )
         s = f"<{el.tag} {attrs}>"
     else:
         s = f"<{el.tag}>"

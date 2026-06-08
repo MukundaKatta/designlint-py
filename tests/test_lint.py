@@ -39,7 +39,7 @@ def test_color_contrast_inherits_background_from_ancestor():
     html = (
         '<div style="background-color: #fff">'
         '<p style="color: #ccc">low contrast inherited bg</p>'
-        '</div>'
+        "</div>"
     )
     fs = lint(html)
     assert any(f.rule_id == "color-contrast" for f in fs)
@@ -178,10 +178,26 @@ def test_parse_color_supports_hex_named_rgb_hsl():
     assert parse_color("not-a-color") is None
 
 
+def test_parse_color_hsl_matches_rgb_equivalent():
+    # hsl(0, 100%, 50%) is pure red; hsl(0, 0%, 100%) is white.
+    assert parse_color("hsl(0, 100%, 50%)") == parse_color("#ff0000")
+    assert parse_color("hsl(0, 0%, 100%)") == parse_color("#ffffff")
+    assert parse_color("hsl(120, 100%, 50%)") == parse_color("#00ff00")
+
+
 def test_contrast_ratio_black_on_white_is_21():
     fg = parse_color("#000")
     bg = parse_color("#fff")
     assert round(contrast_ratio(fg, bg), 2) == 21.0
+
+
+def test_contrast_ratio_composites_translucent_foreground():
+    # A 50%-opaque black over white composites to mid-grey, so the contrast
+    # ratio sits well below the 21:1 of opaque black on white.
+    translucent = parse_color("rgba(0, 0, 0, 0.5)")
+    white = parse_color("#fff")
+    ratio = contrast_ratio(translucent, white)
+    assert 1.0 < ratio < 21.0
 
 
 def test_relative_luminance_white_is_one():
@@ -212,5 +228,6 @@ def test_lint_returns_sorted_by_line():
 
 def test_lint_rejects_non_string_input():
     import pytest
+
     with pytest.raises(TypeError):
         lint(123)  # type: ignore[arg-type]
